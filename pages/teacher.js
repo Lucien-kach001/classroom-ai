@@ -1,5 +1,19 @@
 import { useState, useEffect } from "react";
 
+// FIX 3: New component to handle client-side time formatting.
+function LastSeenTime({ lastSeen }) {
+  const [time, setTime] = useState("—");
+
+  useEffect(() => {
+    if (lastSeen) {
+      // This runs only on the client after the page has hydrated
+      setTime(new Date(lastSeen).toLocaleTimeString());
+    }
+  }, [lastSeen]);
+
+  return <span style={{fontSize:12, color:"#666"}}>{time}</span>;
+}
+
 export default function TeacherPage(){
   const [teacherName, setTeacherName] = useState("");
   const [subject, setSubject] = useState("");
@@ -86,7 +100,8 @@ export default function TeacherPage(){
               <div key={name} style={{border:"1px solid #ddd", padding:8, width:260, borderRadius:6, background:"#fafafa"}}>
                 <div style={{display:"flex", justifyContent:"space-between"}}>
                   <b>{name}</b>
-                  <span style={{fontSize:12, color:"#666"}}>{info.lastSeen ? new Date(info.lastSeen).toLocaleTimeString() : "—"}</span>
+                  {/* FIX 3: Use the new component */}
+                  <LastSeenTime lastSeen={info.lastSeen} />
                 </div>
                 <div style={{height:120, overflow:"auto", background:"#fff", marginTop:8, padding:8}}>
                   {(info.lastView?.snapshot || []).map((m,i)=>(<div key={i}><b>{m.from}:</b> {m.text}</div>))}
