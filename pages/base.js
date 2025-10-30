@@ -32,7 +32,9 @@ export default function BasePage() {
       const r = await fetch("/api/generate", {
         method: "POST",
         headers: {"content-type":"application/json"},
-        body: JSON.stringify({ prompt: `A student asked: ${msg}. Answer helpfully but do not do the homework for them.`, model: "gpt-4o-mini" })
+        // v v v THIS IS THE UPDATED LINE v v v
+        body: JSON.stringify({ prompt: `A student asked: ${msg}. Answer helpfully but do not do the homework for them.` })
+        // ^ ^ ^ Removed the "model: gpt-4o-mini" key-value pair ^ ^ ^
       });
       const j = await r.json();
       const aiMsg = { from: "Tinny Ai", text: j.text || "AI unavailable", ts: Date.now() };
