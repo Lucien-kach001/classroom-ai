@@ -1,7 +1,6 @@
 /** next.config.js */
 const nextConfig = {
-  // Keeping reactStrictMode: false as it was in your original file.
   reactStrictMode: false,
-  // *** FIX: REMOVED the entire 'experimental' block to clear the warning. ***
+  // *** FIX: Removed the experimental block that caused the warning. ***
 };
 module.exports = nextConfig;
