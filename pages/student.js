@@ -72,11 +72,19 @@ export default function StudentPage(){
       const prompt = `Student (grade ${session?.gradeLevel || "N/A"}) asked: ${msg}. Respond as a helpful classroom assistant. Don't do the homework for them.`;
       const r = await fetch("/api/generate", {
         method:"POST", headers:{"content-type":"application/json"},
-        body: JSON.stringify({ prompt })
+        // Note: The model is correctly excluded here, relying on the default in generate.js
+        body: JSON.stringify({ prompt }) 
       });
+      
+      // *** CRITICAL FIX: Check for successful response before parsing JSON ***
+      if (!r.ok) {
+          throw new Error(`API Error: ${r.statusText} (${r.status})`); 
+      }
+      
       const j = await r.json();
       setMessages(m=>[...m, { from: "Tinny Ai", text: j.text || "No reply", ts: Date.now() }]);
     } catch(e) {
+      console.error("LLM fetch failed:", e); // Helpful for debugging
       setMessages(m=>[...m, { from: "Tinny Ai", text: "Error contacting LLM", ts: Date.now() }]);
     }
   }
