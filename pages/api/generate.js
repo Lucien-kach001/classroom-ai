@@ -1,27 +1,38 @@
-// Minimal LLM proxy — requires OPENAI_API_KEY in env for production use.
-// If you don't have a key, the endpoint returns an error. This is intentionally
-// minimal and exposes only a basic proxy; do not use in production without auth.
-
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
-  const { prompt, model = "gpt-4o-mini", maxTokens = 800 } = req.body || {};
+  // Changed default model to Gemini 2.5 Flash-Lite and maxTokens to a common max value for it (8192).
+  const { prompt, model = "gemini-2.5-flash-lite", maxTokens = 8192 } = req.body || {};
   if (!prompt) return res.status(400).json({ error: "missing prompt" });
-  const key = process.env.OPENAI_API_KEY;
+  // Changed expected environment variable to GEMINI_API_KEY
+  const key = process.env.GEMINI_API_KEY;
   if (!key) return res.status(500).json({ error: "no api key set on server" });
 
   try {
-    const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    // Changed API endpoint to the Gemini API and included the API key as a query parameter
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
       method: "POST",
-      headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" },
+      // Removed Authorization header, as API key is in the URL
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: model,
-        messages: [{ role: "system", content: "You are a helpful classroom assistant." }, { role: "user", content: prompt }],
-        max_tokens: maxTokens,
-        temperature: 0.4
+        // Model is specified in the URL path
+        // System instruction is a separate top-level field
+        systemInstruction: "You are a helpful classroom assistant.",
+        // Messages are structured as 'contents' with 'parts'
+        contents: [{
+          role: "user",
+          parts: [{ text: prompt }]
+        }],
+        // Configuration parameters are nested under 'config'
+        config: {
+          maxOutputTokens: maxTokens, // Gemini uses maxOutputTokens
+          temperature: 0.4 // Temperature is the same
+        }
       })
     });
     const data = await r.json();
-    const text = (data?.choices?.[0]?.message?.content) || data?.choices?.[0]?.text || JSON.stringify(data);
+    
+    // Changed response parsing to match the Gemini API structure
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || JSON.stringify(data);
     return res.json({ text, raw: data });
   } catch (e) {
     console.error(e);
