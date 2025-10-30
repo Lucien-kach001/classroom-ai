@@ -32,13 +32,13 @@ export default function BasePage() {
       const r = await fetch("/api/generate", {
         method: "POST",
         headers: {"content-type":"application/json"},
-        // FIX 1: Removed 'model: "gpt-4o-mini"' to use the default Gemini model set on the server.
+        // FIX 1: Removed 'model: "gpt-4o-mini"'. The server-side API (generate.js) now defaults to Gemini.
         body: JSON.stringify({ prompt: `A student asked: ${msg}. Answer helpfully but do not do the homework for them.` })
       });
       
-      // FIX 2: Check for successful response before trying to parse JSON.
+      // FIX 2: Check for successful response BEFORE trying to parse JSON.
       if (!r.ok) {
-        // If API fails (e.g., missing API key, 500 error), throw an error to trigger catch block
+        // If the API failed (e.g., missing key), this prevents the client-side crash.
         throw new Error(`API Error: ${r.statusText} (${r.status})`);
       }
       
@@ -46,7 +46,7 @@ export default function BasePage() {
       const aiMsg = { from: "Tinny Ai", text: j.text || "AI unavailable", ts: Date.now() };
       setMessages(m=>[...m, aiMsg]);
     } catch(e) {
-      console.error("LLM fetch failed:", e); // Helpful for debugging
+      console.error("LLM fetch failed:", e);
       setMessages(m=>[...m, { from: "Tinny Ai", text: "Error contacting LLM", ts: Date.now() }]);
     }
   }
